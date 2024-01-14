@@ -13,7 +13,6 @@ const startGame = async (chatId) => {
     "Зараз я звгвдвю цифру від 0 до 9, а ти повинен(на) її відгадати"
   );
   const randomNumber = Math.floor(Math.random() * 10);
-  console.log("randomNumber: ", randomNumber);
   chats[chatId] = randomNumber;
 
   await bot.sendMessage(chatId, "Вгадуй", gameOptions);
@@ -60,8 +59,7 @@ const start = () => {
   });
 
   bot.on("callback_query", (msg) => {
-    const data = parseInt(msg.data);
-    console.log(data);
+    const data = msg.data;
 
     const chatId = msg.message.chat.id;
 
@@ -69,7 +67,7 @@ const start = () => {
       return startGame(chatId);
     }
 
-    if (data === chats[chatId]) {
+    if (parseFloat(data) === chats[chatId]) {
       return bot.sendMessage(
         chatId,
         `Вітаю, ти вгадав цифру ${chats[chatId]}`,
