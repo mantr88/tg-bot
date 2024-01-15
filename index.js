@@ -2,8 +2,8 @@ const TgApi = require('node-telegram-bot-api');
 const { gameOptions, againOptions } = require('./options');
 const sequilize = require('./db');
 const UserModel = require('./models');
-
-const token = '6960541088:AAGBObm6Gl-IWAf_VlhSlxHWVG7esx98N1E';
+const dotenv = require('dotenv/config');
+const token = process.env.TOKEN;
 
 const bot = new TgApi(token, { polling: true });
 

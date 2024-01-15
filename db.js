@@ -1,7 +1,10 @@
 const { Sequelize } = require('sequelize');
+const dotenv = require('dotenv/config');
 
-module.exports = new Sequelize('tg-bot', 'root', '4s9l@xr^0e{YC|@_', {
-  host: '34.32.48.234',
-  port: '3306',
+const { DB_HOST, DB_PORT, DB_USER_NAME, DB_PASSWORD, DB_NAME } = process.env;
+
+module.exports = new Sequelize(DB_NAME, DB_USER_NAME, DB_PASSWORD, {
+  host: DB_HOST,
+  port: DB_PORT,
   dialect: 'mysql',
 });
