@@ -1,84 +1,97 @@
-const TgApi = require("node-telegram-bot-api");
-const { gameOptions, againOptions } = require("./options");
+const TgApi = require('node-telegram-bot-api');
+const { gameOptions, againOptions } = require('./options');
+const sequilize = require('./db');
+const UserModel = require('./models');
 
-const token = "6960541088:AAGBObm6Gl-IWAf_VlhSlxHWVG7esx98N1E";
+const token = '6960541088:AAGBObm6Gl-IWAf_VlhSlxHWVG7esx98N1E';
 
 const bot = new TgApi(token, { polling: true });
 
 const chats = {};
 
-const startGame = async (chatId) => {
-  await bot.sendMessage(
-    chatId,
-    "Зараз я звгвдвю цифру від 0 до 9, а ти повинен(на) її відгадати"
-  );
+const startGame = async chatId => {
+  await bot.sendMessage(chatId, 'Зараз я загадаю цифру від 0 до 9, а ти повинен(на) її відгадати');
   const randomNumber = Math.floor(Math.random() * 10);
   chats[chatId] = randomNumber;
 
-  await bot.sendMessage(chatId, "Вгадуй", gameOptions);
+  await bot.sendMessage(chatId, 'Вгадуй', gameOptions);
 };
 
 bot.setMyCommands([
-  { command: "/start", description: "Привітанячко!" },
-  { command: "/info", description: "Отримати інформацію про користувача" },
-  { command: "/game", description: "Гра вгадай цифру" },
+  { command: '/start', description: 'Привітанячко!' },
+  { command: '/info', description: 'Отримати інформацію про користувача' },
+  { command: '/game', description: 'Гра вгадай цифру' },
 ]);
 
-const start = () => {
-  bot.on("message", async (msg) => {
+const start = async () => {
+  try {
+    await sequilize.authenticate();
+    await sequilize.sync();
+    console.log('Connection has been established successfully.');
+  } catch (error) {
+    console.log(error);
+  }
+
+  bot.on('message', async msg => {
     const text = msg.text;
     const chatId = msg.chat.id;
 
-    if (text === "/start") {
-      await bot.sendSticker(
-        chatId,
-        "https://media.stickerswiki.app/ptkdev/1069198.160.webp"
-      );
-      return bot.sendMessage(
-        chatId,
-        `Вітаю Вас в Telegram боті Петренко Антона 
-`
-      );
-    }
+    try {
+      if (text === '/start') {
+        console.log(chatId);
+        const user = await UserModel.findOne({ chatId });
+        if (!user) {
+          await UserModel.create({ chatId });
+        }
 
-    if (text === "/info") {
-      return bot.sendMessage(
-        chatId,
-        `Тебе звати ${msg.from.first_name} ${msg.from.last_name}`
-      );
-    }
+        await bot.sendSticker(chatId, 'https://media.stickerswiki.app/ptkdev/1069198.160.webp');
+        return bot.sendMessage(chatId, 'Вітаю Вас в Telegram боті Петренко Антона!');
+      }
 
-    if (text === "/game") {
-      return startGame(chatId);
-    }
+      if (text === '/info') {
+        const user = await UserModel.findOne({ chatId });
+        return bot.sendMessage(
+          chatId,
+          `Вітаю тебе ${msg.from.first_name}, в тебе правильних відповідей у грі ${user.right}, неправильних відповідей ${user.wrong}`,
+        );
+      }
 
-    return bot.sendMessage(
-      chatId,
-      "Я не зрозумів тебе, спробуй ще раз, або зміни команду!"
-    );
+      if (text === '/game') {
+        return startGame(chatId);
+      }
+
+      return bot.sendMessage(chatId, 'Я не зрозумів тебе, спробуй ще раз, або зміни команду!');
+    } catch (error) {
+      return bot.sendMessage(chatId, 'Виникла якась помилка, давай почнемо спочатку!');
+    }
   });
 
-  bot.on("callback_query", (msg) => {
+  bot.on('callback_query', async msg => {
     const data = msg.data;
 
     const chatId = msg.message.chat.id;
 
-    if (data === "/again") {
-      return startGame(chatId);
-    }
+    try {
+      if (data === '/again') {
+        return startGame(chatId);
+      }
+      const user = await UserModel.findOne({ chatId });
 
-    if (parseFloat(data) === chats[chatId]) {
-      return bot.sendMessage(
-        chatId,
-        `Вітаю, ти вгадав цифру ${chats[chatId]}`,
-        againOptions
-      );
-    } else {
-      return bot.sendMessage(
-        chatId,
-        `Нажаль ти не вгадав, бот загадав цифру ${chats[chatId]}`,
-        againOptions
-      );
+      if (parseFloat(data) === chats[chatId]) {
+        user.right += 1;
+        await bot.sendMessage(chatId, `Вітаю, ти вгадав цифру ${chats[chatId]}`, againOptions);
+      } else {
+        user.wrong += 1;
+        await bot.sendMessage(
+          chatId,
+          `Нажаль ти не вгадав, бот загадав цифру ${chats[chatId]}`,
+          againOptions,
+        );
+      }
+
+      await user.save();
+    } catch (error) {
+      return bot.sendMessage(chatId, 'Виникла якась помилка, давай почнемо спочатку!');
     }
   });
 };
