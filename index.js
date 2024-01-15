@@ -27,7 +27,6 @@ const start = async () => {
   try {
     await sequilize.authenticate();
     await sequilize.sync();
-    console.log('Connection has been established successfully.');
   } catch (error) {
     console.log(error);
   }
