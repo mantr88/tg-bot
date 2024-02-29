@@ -5,7 +5,7 @@ const UserModel = require('./models');
 const dotenv = require('dotenv/config');
 const token = process.env.TOKEN;
 
-const bot = new TgApi(token, { polling: true });
+const bot = new TgApi(token, { polling: false });
 
 const chats = {};
 
