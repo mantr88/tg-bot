@@ -50,7 +50,7 @@ const start = async () => {
         const user = await UserModel.findOne({ chatId });
         return bot.sendMessage(
           chatId,
-          `Вітаю тебе ${msg.from.first_name}, в тебе правильних відповідей у грі ${user.right}, неправильних відповідей ${user.wrong}`,
+          `Вітаю тебе ${msg.from.first_name}, в тебе правильних відповідей у грі ${user.correct}, неправильних відповідей ${user.wrong}`,
         );
       }
 
@@ -76,7 +76,7 @@ const start = async () => {
       const user = await UserModel.findOne({ chatId });
 
       if (parseFloat(data) === chats[chatId]) {
-        user.right += 1;
+        user.correct += 1;
         await bot.sendMessage(chatId, `Вітаю, ти вгадав цифру ${chats[chatId]}`, againOptions);
       } else {
         user.wrong += 1;
