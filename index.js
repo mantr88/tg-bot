@@ -3,9 +3,16 @@ const { gameOptions, againOptions } = require('./options');
 const sequilize = require('./db');
 const UserModel = require('./models');
 const dotenv = require('dotenv/config');
-const token = process.env.TOKEN;
+const TOKEN = process.env.TOKEN;
+const PORT = process.env.PORT || 3000;
 
-const bot = new TgApi(token, { polling: true });
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => res.status(200));
+app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`));
+
+const bot = new TgApi(TOKEN, { polling: true });
 
 const chats = {};
 
